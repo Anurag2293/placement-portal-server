@@ -27,30 +27,47 @@ router.post('/create', async (req, res) => {
     }
 })
 
-// Add Student to company
+// Add Student to company and add company to student
 router.post('/apply', async (req, res) => {
     try {
-        const student = await Student.findOne({ email: req.body.studentEmail})
-        if (!student) {
+        const studentEmail = req.body.studentEmail;
+        const companyEmail = req.body.companyEmail;
+
+        const updatedStudent = await Student.findOneAndUpdate(
+            { email: studentEmail },
+            { $push: { companiesApplied: {
+                companyEmail: companyEmail,
+                status: 'Applied'
+            } } },
+            { new: true } // to return the updated document
+        )
+        if (!updatedStudent) {
             return res.status(404).json({
                 success: false,
                 message: 'Student does not exist'
             })
         }
 
-        const company = await Company.findOneAndUpdate(
-            { email: req.body.companyEmail },
+        const updatedCompany = await Company.findOneAndUpdate(
+            { email: companyEmail },
             { $push: { studentsApplied: { 
-                studentEmail: req.body.studentEmail, 
+                studentEmail: studentEmail, 
                 status: 'Applied' 
             } } },
             { new: true } // to return the updated document
         );
+        if (!updatedCompany) {
+            return res.status(404).json({
+                success: false,
+                message: 'Company does not exist'
+            })
+        }
 
         res.status(201).json({
             success: true,
             message: 'Student applied successfully', 
-            company
+            updatedCompany,
+            updatedStudent
         })
     } catch (err) {
         res.status(501).json({

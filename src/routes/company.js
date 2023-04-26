@@ -12,8 +12,6 @@ router.get('/', (req, res) => {
 router.post('/create', async (req, res) => {
     try {
         const body = req.body
-        console.log(body)
-
         const company = await Company.create(body)
 
         res.status(201).json({
@@ -21,7 +19,7 @@ router.post('/create', async (req, res) => {
             message: "Successfully created a company"
         })
     } catch (error) {
-        res.status(404).json({
+        res.status(500).json({
             success: false,
             message: error.message
         })
@@ -36,25 +34,37 @@ router.put('/application', async (req, res) => {
         const status = req.body.status;
 
         // Find the company by email
-        const company = await Company.findOne({ email: companyEmail });
-        if (!company) {
+        // const company = await Company.findOne({ email: companyEmail });
+        const updatedCompany = await Company.findOneAndUpdate(
+            { email: companyEmail, "studentsApplied.studentEmail": studentEmail },
+            { $set: { "studentsApplied.$.status": status } },
+            { new: true }
+        )
+        if (!updatedCompany) {
             return res.status(404).json({ success: false, message: "Company not found." });
         }
 
         // Find the student by email and update the status for the given company
-        const student = await Student.findOneAndUpdate(
+        const updatedStudent = await Student.findOneAndUpdate(
             { email: studentEmail, "companiesApplied.companyEmail": companyEmail },
             { $set: { "companiesApplied.$.status": status } },
             { new: true }
         );
 
-        if (!student) {
+        if (!updatedStudent) {
             return res.status(404).json({ success: false, message: "Student not found." });
         }
 
-        return res.json(student);
+        return res.json({
+            success: true,
+            message: "Application status successfully updated",
+            updatedStudent
+        });
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        res.status(505).json({
+            success: false,
+            message: error.message
+        })
     }
 });
 
