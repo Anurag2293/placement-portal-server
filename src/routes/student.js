@@ -1,8 +1,12 @@
 const express = require('express')
+const bcrypt = require('bcryptjs')
+
 const Student = require('../models/student.js')
 const Company = require('../models/company.js')
 
 const router = express.Router()
+const saltRounds = 5;
+
 
 router.get('/', (req, res) => {
     res.send('This is the student route')
@@ -11,16 +15,75 @@ router.get('/', (req, res) => {
 // Create Student
 router.post('/create', async (req, res) => {
     try {
-        const body = req.body;
+        const student = await Student.findOne({ email: req.body.email })
+        if (student) {
+            return res.status(404).json({
+                success: false,
+                message: 'User with same email exists'
+            })
+        }
 
-        const student = await Student.create(body)
+        bcrypt.hash(req.body.password, saltRounds, async (hashError, hash)=>{
+            if (hashError) {
+                return res.status(404).json({
+                    success: false,
+                    message: hashError.message
+                })
+            }
 
-        res.status(201).json({
-            success: true,
-            message: "Successfully created student profile"
-        })
+            const student = await Student.create({...req.body, password: hash})
+
+            res.status(201).json({
+                success: true,
+                message: "Successfully created student profile"
+            })
+        });        
     } catch (error) {
         res.status(404).json({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
+// Login Student
+router.post('/login', async (req, res) => {
+    try {
+        const email = req.body.email;
+        const password = req.body.password;
+
+        if (email.length === 0 || password.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Enter the details correctly'
+            })
+        }
+
+        const student = await Student.findOne({ email })
+
+        if (!student) {
+            return res.status(404).json({
+                success: false,
+                message: 'No such student exists'
+            })
+        }
+
+        bcrypt.compare(password, student.password, (error, result) => {
+            if (result === true) {
+                return res.status(201).json({
+                    success: true,
+                    message: 'Login successfully',
+                    student
+                })
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: 'Password entered was incorrect'
+                })
+            }
+        })
+    } catch (error) {
+        res.status(501).json({
             success: false,
             message: error.message
         })

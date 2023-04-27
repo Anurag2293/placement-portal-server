@@ -9,8 +9,8 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json())
-app.use('/company', companyRouter)
-app.use('/student', studentRouter)
+app.use('/api/company', companyRouter)
+app.use('/api/student', studentRouter)
 
 app.get('/', (req, res) => {
     res.send("Hello this is Anurag")
