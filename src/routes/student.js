@@ -7,7 +7,6 @@ const Company = require('../models/company.js')
 const router = express.Router()
 const saltRounds = 5;
 
-
 router.get('/', (req, res) => {
     res.send('This is the student route')
 })
@@ -15,6 +14,7 @@ router.get('/', (req, res) => {
 // Create Student
 router.post('/create', async (req, res) => {
     try {
+        console.log(req.body)
         const student = await Student.findOne({ email: req.body.email })
         if (student) {
             return res.status(404).json({
@@ -31,11 +31,12 @@ router.post('/create', async (req, res) => {
                 })
             }
 
-            const student = await Student.create({...req.body, password: hash})
+            const newStudent = await Student.create({...req.body, password: hash})
 
             res.status(201).json({
                 success: true,
-                message: "Successfully created student profile"
+                message: "Successfully created student profile",
+                student: newStudent
             })
         });        
     } catch (error) {

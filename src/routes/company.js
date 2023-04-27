@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
 // Create Company
 router.post('/create', async (req, res) => {
     try {
-        const company = await Student.findOne({ email: req.body.email })
+        const company = await Company.findOne({ email: req.body.email })
         if (company) {
             return res.status(404).json({
                 success: false,
@@ -30,11 +30,12 @@ router.post('/create', async (req, res) => {
                 })
             }
 
-            const student = await Company.create({...req.body, password: hash})
+            const newCompany = await Company.create({...req.body, password: hash})
 
             res.status(201).json({
                 success: true,
-                message: "Successfully created company profile"
+                message: "Successfully created company profile",
+                company: newCompany
             })
         });
     } catch (error) {
