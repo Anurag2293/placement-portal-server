@@ -11,6 +11,49 @@ router.get('/', (req, res) => {
     res.send('This is the student route')
 })
 
+// List all the students
+router.get('/listall', async (req, res) => {
+    try {
+        const students = await Student.find({})
+
+        res.json({
+            success: true,
+            students
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
+// List all companies of a student 
+router.post('/listcompanies', async (req, res) => {
+    try {
+        const studentEmail = req.body.email
+        const student = await Student.findOne({ email: studentEmail })
+
+        if (!student) {
+            return res.json({
+                success: false,
+                message: 'No such student exists'
+            })
+        }
+
+        res.json({
+            success: true,
+            companiesApplied: student.companiesApplied
+        })
+
+    } catch (error) {
+        res.json({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
 // Create Student
 router.post('/create', async (req, res) => {
     try {

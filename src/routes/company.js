@@ -11,6 +11,49 @@ router.get('/', (req, res) => {
     res.send('This is the company route')
 })
 
+// Send all companies 
+router.get('/listall', async (req, res) => {
+    try {
+        const companies = await Company.find({})
+
+        res.json({
+            success: true,
+            companies
+        })
+    } catch (error) {
+        res.json({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
+// List all the students who have applied for a company
+router.post('/liststudents', async (req, res) => {
+    try {
+        const companyEmail = req.body.email
+        const company = await Company.findOne({ email: companyEmail })
+
+        if (!company) {
+            return res.json({
+                success: false,
+                message: 'No such company exists'
+            })
+        }
+
+        res.json({
+            success: true,
+            studentsApplied: company.studentsApplied
+        })
+
+    } catch (error) {
+        res.json({
+            success: false,
+            message: error.message
+        })
+    }
+})
+
 // Create Company
 router.post('/create', async (req, res) => {
     try {
